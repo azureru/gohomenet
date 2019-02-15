@@ -13,10 +13,17 @@ import (
 // ENV
 //    PINGIN_INTERFACE=en0
 //    PINGIN_INTERFACE=en0,en6
+//    PINGIN_URL=https://api.ipify.org/
 func main() {
 	log.SetFlags(log.Lshortfile | log.LUTC)
+
 	interfaceString := os.Getenv("PINGIN_INTERFACE")
 	interfaceNames := strings.Split(interfaceString, ",")
+
+	urlString := os.Getenv("PINGIN_URL")
+	if urlString == "" {
+		urlString = "https://api.ipify.org/"
+	}
 
 	// if interface not specified use all :)
 	if len(interfaceNames) <= 0 || interfaceString == "" {
@@ -32,14 +39,14 @@ func main() {
 	}
 
 	for _, name := range interfaceNames {
-		err := getIP(name)
+		err := getIP(name, urlString)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func getIP(interfaceName string) error {
+func getIP(interfaceName, urlString string) error {
 	ief, err := net.InterfaceByName(interfaceName)
 	if err != nil {
 		return err
@@ -68,7 +75,7 @@ func getIP(interfaceName string) error {
 	client := &http.Client{
 		Transport: transport,
 	}
-	response, err := client.Get("https://api.ipify.org/")
+	response, err := client.Get(urlString)
 	if err != nil {
 		return err
 	} else {
